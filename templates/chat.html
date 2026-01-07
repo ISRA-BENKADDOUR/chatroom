@@ -188,7 +188,6 @@
             border-radius: 10px;
         }
 
-        /* Online indicator */
         .online-indicator {
             display: inline-block;
             width: 10px;
@@ -214,7 +213,6 @@
             </div>
         </div>
 
-        <!-- شاشة تسجيل الدخول -->
         <div id="login-screen">
             <div class="login-box">
                 <h2>أدخل اسمك للانضمام</h2>
@@ -228,7 +226,6 @@
             </div>
         </div>
 
-        <!-- شاشة الدردشة -->
         <div id="chat-screen" class="hidden">
             <div id="messages"></div>
             <div class="input-area">
@@ -243,24 +240,18 @@
     </div>
 
     <script>
-        // ==================== WebSocket Connection ====================
         const socket = io();
         let username = '';
 
-        // ==================== Functions ====================
         
-        /**
-         * الانضمام للدردشة
-         */
+        
         function joinChat() {
             const input = document.getElementById('username-input');
             username = input.value.trim();
             
             if (username) {
-                // إرسال طلب الانضمام للسيرفر
                 socket.emit('join', { username: username });
                 
-                // الانتقال لشاشة الدردشة
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('chat-screen').classList.remove('hidden');
                 document.getElementById('message-input').focus();
@@ -269,30 +260,24 @@
             }
         }
 
-        /**
-         * إرسال رسالة
-         */
+        
+         
         function sendMessage() {
             const input = document.getElementById('message-input');
             const message = input.value.trim();
             
             if (message) {
-                // إرسال الرسالة للسيرفر
                 socket.emit('send_message', { message: message });
                 input.value = '';
                 input.focus();
             }
         }
 
-        /**
-         * إضافة رسالة للواجهة
-         */
         function addMessage(username, text) {
             const messagesDiv = document.getElementById('messages');
             const messageEl = document.createElement('div');
             messageEl.className = 'message';
             
-            // تنظيف النص من HTML لتجنب XSS
             const safeText = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             const safeUsername = username.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             
@@ -305,9 +290,6 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        /**
-         * إضافة رسالة نظام
-         */
         function addSystemMessage(text) {
             const messagesDiv = document.getElementById('messages');
             const messageEl = document.createElement('div');
@@ -317,26 +299,16 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        // ==================== WebSocket Events ====================
 
-        /**
-         * عند الاتصال بالسيرفر
-         */
         socket.on('connect', () => {
             console.log('✅ Connected to server');
         });
 
-        /**
-         * عند الانفصال عن السيرفر
-         */
         socket.on('disconnect', () => {
             console.log('❌ Disconnected from server');
             addSystemMessage('⚠️ تم قطع الاتصال بالسيرفر');
         });
 
-        /**
-         * استقبال الرسائل السابقة
-         */
         socket.on('previous_messages', (data) => {
             console.log('📜 Loading previous messages:', data.messages.length);
             data.messages.forEach(msg => {
@@ -344,57 +316,40 @@
             });
         });
 
-        /**
-         * استقبال رسالة جديدة
-         */
         socket.on('receive_message', (data) => {
             console.log('💬 New message:', data);
             addMessage(data.username, data.message);
         });
 
-        /**
-         * عند انضمام مستخدم جديد
-         */
         socket.on('user_joined', (data) => {
             console.log('👤 User joined:', data.username);
             addSystemMessage(`🎉 ${data.username} انضم إلى الدردشة`);
             
-            // تحديث عدد المستخدمين
             if (data.users_count) {
                 document.getElementById('users-count').innerHTML = 
                     `${data.users_count} متصل <span class="online-indicator"></span>`;
             }
         });
 
-        /**
-         * عند خروج مستخدم
-         */
         socket.on('user_left', (data) => {
             console.log('👋 User left:', data.username);
             addSystemMessage(`👋 ${data.username} غادر الدردشة`);
         });
 
-        // ==================== Keyboard Events ====================
 
-        /**
-         * الضغط على Enter في حقل الاسم
-         */
+        
         document.getElementById('username-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 joinChat();
             }
         });
 
-        /**
-         * الضغط على Enter في حقل الرسالة
-         */
         document.getElementById('message-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 sendMessage();
             }
         });
 
-        // ==================== Auto Focus ====================
         window.onload = () => {
             document.getElementById('username-input').focus();
         };
