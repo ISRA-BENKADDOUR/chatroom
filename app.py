@@ -6,20 +6,15 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-here-change-it'
 socketio = SocketIO(app, cors_allowed_origins="*")
 
-# ==================== MODEL ====================
-# تخزين بيانات المستخدمين والرسائل
-users = {}  # {socket_id: username}
-messages = []  # [{username, message}, ...]
 
-# ==================== CONTROLLER ====================
-# معالجة الطلبات والأحداث
+users = {} 
+messages = [] 
 
 @app.route('/')
 def index():
     """عرض صفحة الشات الرئيسية"""
     return render_template('chat.html')
 
-# ========== WebSocket Events ==========
 
 @socketio.on('connect')
 def handle_connect():
@@ -32,7 +27,6 @@ def handle_disconnect():
     if request.sid in users:
         username = users[request.sid]
         del users[request.sid]
-        # إعلام الجميع بخروج المستخدم
         emit('user_left', {'username': username}, broadcast=True)
         print(f'❌ User disconnected: {username}')
 
@@ -42,10 +36,8 @@ def handle_join(data):
     username = data['username']
     users[request.sid] = username
     
-    # إرسال الرسائل السابقة للمستخدم الجديد
     emit('previous_messages', {'messages': messages})
     
-    # إعلام الجميع بانضمام المستخدم
     emit('user_joined', {
         'username': username,
         'users_count': len(users)
@@ -62,14 +54,11 @@ def handle_message(data):
         'message': data['message']
     }
     
-    # حفظ الرسالة في الذاكرة
     messages.append(message_data)
     
-    # الاحتفاظ بآخر 50 رسالة فقط
     if len(messages) > 50:
         messages.pop(0)
     
-    # بث الرسالة لجميع المستخدمين المتصلين
     emit('receive_message', message_data, broadcast=True)
     print(f'💬 {username}: {data["message"]}')
 
@@ -79,12 +68,11 @@ def handle_typing(data):
     username = users.get(request.sid, 'Anonymous')
     emit('user_typing', {'username': username}, broadcast=True, include_self=False)
 
-# ==================== RUN SERVER ====================
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     socketio.run(
         app, 
-        debug=False,  # مهم للإنتاج
+        debug=False,   
         host='0.0.0.0', 
         port=port
     )
