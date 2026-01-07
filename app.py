@@ -12,18 +12,15 @@ messages = []
 
 @app.route('/')
 def index():
-    """عرض صفحة الشات الرئيسية"""
     return render_template('chat.html')
 
 
 @socketio.on('connect')
 def handle_connect():
-    """عند اتصال مستخدم جديد"""
     print(f'✅ User connected: {request.sid}')
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    """عند انفصال مستخدم"""
     if request.sid in users:
         username = users[request.sid]
         del users[request.sid]
@@ -32,7 +29,6 @@ def handle_disconnect():
 
 @socketio.on('join')
 def handle_join(data):
-    """عند انضمام مستخدم للشات"""
     username = data['username']
     users[request.sid] = username
     
@@ -47,7 +43,6 @@ def handle_join(data):
 
 @socketio.on('send_message')
 def handle_message(data):
-    """عند إرسال رسالة"""
     username = users.get(request.sid, 'Anonymous')
     message_data = {
         'username': username,
@@ -64,7 +59,6 @@ def handle_message(data):
 
 @socketio.on('typing')
 def handle_typing(data):
-    """عند كتابة مستخدم (اختياري)"""
     username = users.get(request.sid, 'Anonymous')
     emit('user_typing', {'username': username}, broadcast=True, include_self=False)
 
